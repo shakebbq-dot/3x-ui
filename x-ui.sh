@@ -515,9 +515,73 @@ show_log() {
     fi
 }
 
+optimize_network() {
+    echo -e "${green}Applying advanced network optimizations (Reduce Packet Loss)...${plain}"
+    
+    if [ -d "/etc/sysctl.d/" ]; then
+        cat > /etc/sysctl.d/99-xui-network-optimization.conf <<EOF
+# X-UI Advanced Network Optimization
+fs.file-max = 1000000
+fs.inotify.max_user_instances = 8192
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 250000
+net.core.somaxconn = 32768
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_keepalive_time = 1200
+net.ipv4.ip_local_port_range = 10000 65000
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_max_tw_buckets = 5000
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_mtu_probing = 1
+EOF
+        sysctl --system
+    else
+        sed -i '/fs.file-max/d' /etc/sysctl.conf
+        sed -i '/fs.inotify.max_user_instances/d' /etc/sysctl.conf
+        sed -i '/net.core.rmem_max/d' /etc/sysctl.conf
+        sed -i '/net.core.wmem_max/d' /etc/sysctl.conf
+        sed -i '/net.core.netdev_max_backlog/d' /etc/sysctl.conf
+        sed -i '/net.core.somaxconn/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_syncookies/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_tw_reuse/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_fin_timeout/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_keepalive_time/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_max_syn_backlog/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_max_tw_buckets/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_fastopen/d' /etc/sysctl.conf
+        sed -i '/net.ipv4.tcp_mtu_probing/d' /etc/sysctl.conf
+        
+        cat >> /etc/sysctl.conf <<EOF
+fs.file-max = 1000000
+fs.inotify.max_user_instances = 8192
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 250000
+net.core.somaxconn = 32768
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_keepalive_time = 1200
+net.ipv4.ip_local_port_range = 10000 65000
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_max_tw_buckets = 5000
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_mtu_probing = 1
+EOF
+        sysctl -p
+    fi
+    
+    echo -e "${green}Advanced network optimization applied successfully!${plain}"
+}
+
 bbr_menu() {
     echo -e "${green}\t1.${plain} Enable BBR"
     echo -e "${green}\t2.${plain} Disable BBR"
+    echo -e "${green}\t3.${plain} Apply Advanced Network Optimization (Reduce Packet Loss)"
     echo -e "${green}\t0.${plain} Back to Main Menu"
     read -rp "Choose an option: " choice
     case "$choice" in
@@ -530,6 +594,10 @@ bbr_menu() {
         ;;
     2)
         disable_bbr
+        bbr_menu
+        ;;
+    3)
+        optimize_network
         bbr_menu
         ;;
     *)
@@ -2214,7 +2282,7 @@ show_menu() {
 │  ${green}22.${plain} Firewall Management                       │
 │  ${green}23.${plain} SSH Port Forwarding Management            │
 │────────────────────────────────────────────────│
-│  ${green}24.${plain} Enable BBR                                │
+│  ${green}24.${plain} Network Optimization (BBR/TCP)            │
 │  ${green}25.${plain} Update Geo Files                          │
 │  ${green}26.${plain} Speedtest by Ookla                        │
 ╚────────────────────────────────────────────────╝
